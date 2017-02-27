@@ -64,11 +64,11 @@ int main(int argc, char *argv[])
 
 
     printf("Sending packet SYN\n");
-    n = sendto(sockfd,"SYN",4, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    //n = sendto(sockfd,"SYN",4, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     if (n < 0) {error("ERROR sending to socket");}
 
-    n = recvfrom(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&serv_addr, &serv_len);
-    if (n < 0) {error("ERROR reading from socket");}
+    //n = recvfrom(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&serv_addr, &serv_len);
+    //if (n < 0) {error("ERROR reading from socket");}
     printf("Received SYN From server");
 
     n = sendto(sockfd,filename,strlen(filename), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
@@ -78,12 +78,12 @@ int main(int argc, char *argv[])
 	
 	//char fin[6];
 	//strcpy(fin, "FIN");
-        memset(buffer,0,MAX_PACKET_LEN);
+    memset(buffer,0,MAX_PACKET_LEN);
 	int seq_num = 0; //UPDATE!!!!
 	
-        n = recvfrom(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&serv_addr, &serv_len); //read from the socket
+    n = recvfrom(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&serv_addr, &serv_len); //read from the socket
 	//printf("n: %d", n);
-        if (n < 0) {error("ERROR reading from socket");}
+    if (n < 0) {error("ERROR reading from socket");}
         //printf("%s\n",buffer);	//print server's response
     /*
     	if(strcmp(buffer, fin)) {
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	data = fopen("received.data", "a");
 	//printf("buffer client: %s", buffer);
 	//Need to parse out sequence number
-    	fprintf(data, buffer);
+    fprintf(data, buffer);
 	
 	fclose(data);
 	

@@ -31,10 +31,9 @@ int main(int argc, char *argv[])
      exit(1);
   }
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);	//create socket
-  if (sockfd < 0) 
-    error("ERROR opening socket");
+  if (sockfd < 0) error("ERROR opening socket");
   memset((char *) &serv_addr, 0, sizeof(serv_addr));	//reset memory
-  //fill in address info
+
   portno = atoi(argv[1]);
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -52,9 +51,10 @@ int main(int argc, char *argv[])
 
     //read client's message
     n = recvfrom(sockfd,buffer, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen);
-    if(buffer == "SYN") {
-	printf("Sending packet %d %d SYN\n", seq_num, WINDOW_SIZE);
-    }
+    printf("Sending packet %d %d SYN\n", seq_num, WINDOW_SIZE);
+/*    if(buffer == "SYN") {
+	       printf("Sending packet %d %d SYN\n", seq_num, WINDOW_SIZE);
+    }*/
     if (n < 0) error("ERROR reading from socket");
     //printf("Here is the message: %s\n",buffer);
     //buffer contains filename now
@@ -64,17 +64,17 @@ int main(int argc, char *argv[])
       fseek(fp, 0, SEEK_END);
       long file_length = ftell(fp);
       rewind(fp);
-	memset(buffer, 0, MAX_PACKET_LEN);
-	char buff1[HEADER_SIZE];
-	snprintf(buff1, HEADER_SIZE, "%d", seq_num);	
-	fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
-	//printf("buffer: %s", buffer);
-	printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
-	n = sendto(sockfd,strcat(buff1, buffer),MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, clilen);
-	seq_num++;
-	if (n < 0) {
-	  error("ERROR writing to socket");
-	}	
+    	memset(buffer, 0, MAX_PACKET_LEN);
+    	char buff1[HEADER_SIZE];
+    	snprintf(buff1, HEADER_SIZE, "%d", seq_num);	
+    	fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
+    	//printf("buffer: %s", buffer);
+    	printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
+    	n = sendto(sockfd,strcat(buff1, buffer),MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, clilen);
+    	seq_num++;
+    	if (n < 0) {
+    	  error("ERROR writing to socket");
+    	}	
     }
     else {
   	printf("Nope. Try another file.");
