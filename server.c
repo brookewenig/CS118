@@ -42,6 +42,9 @@ int main(int argc, char *argv[])
   if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
           error("ERROR on binding");
 	
+//////////////////////////////////////////////////////////////////////////////////
+
+
   int seq_num = 0;
   while(1){
     int n;
@@ -50,41 +53,34 @@ int main(int argc, char *argv[])
     memset(buffer, 0, MAX_PACKET_LEN);	//reset memory
 
     //read client's message
-    n = recvfrom(sockfd,buffer, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen);
+    n = recvfrom(sockfd,buffer, MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, &clilen);
     printf("Sending packet %d %d SYN\n", seq_num, WINDOW_SIZE);
-/*    if(buffer == "SYN") {
-	       printf("Sending packet %d %d SYN\n", seq_num, WINDOW_SIZE);
-    }*/
     if (n < 0) error("ERROR reading from socket");
-    //printf("Here is the message: %s\n",buffer);
-    //buffer contains filename now
+
     FILE *fp;
-    fp = fopen(buffer, "rb");
+    fp = fopen(buffer, "rb"); //filename
     if(fp != NULL) {
       fseek(fp, 0, SEEK_END);
       long file_length = ftell(fp);
       rewind(fp);
     	memset(buffer, 0, MAX_PACKET_LEN);
-    	char buff1[HEADER_SIZE];
-    	snprintf(buff1, HEADER_SIZE, "%d", seq_num);	
-    	fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
+    	//char buff1[HEADER_SIZE];
+    	//snprintf(buff1, HEADER_SIZE, "%d", seq_num);	
+    	fread(buffer, sizeof(char), MAX_PACKET_LEN-1, fp);//-HEADER_SIZE
     	//printf("buffer: %s", buffer);
     	printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
-    	n = sendto(sockfd,strcat(buff1, buffer),MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, clilen);
+    	n = sendto(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, clilen);
     	seq_num++;
     	if (n < 0) {
     	  error("ERROR writing to socket");
     	}	
     }
     else {
-  	printf("Nope. Try another file.");
+  	 printf("Nope. Try another file.");
     }
     fclose(fp);
     printf("Sending packet %d %d FIN\n", seq_num, WINDOW_SIZE);
     break;
-   // n = sendto(sockfd,"FIN", 4, 0, (struct sockaddr *)&cli_addr, clilen);
-   //n = sendto(sockfd,"I got your message",18, 0, (struct sockaddr *)&cli_addr, clilen);
-   //if (n < 0) error("ERROR writing to socket");
   }
      
  close(sockfd); 

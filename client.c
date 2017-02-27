@@ -60,47 +60,30 @@ int main(int argc, char *argv[])
     char* filename = argv[3];
     //printf("File to send: %s", filename);
 
-
+//////////////////////////////////////////////////////////////////////////////////
 
 
     printf("Sending packet SYN\n");
-    //n = sendto(sockfd,"SYN",4, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-    if (n < 0) {error("ERROR sending to socket");}
-
-    //n = recvfrom(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&serv_addr, &serv_len);
-    //if (n < 0) {error("ERROR reading from socket");}
-    printf("Received SYN From server");
 
     n = sendto(sockfd,filename,strlen(filename), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     if (n < 0) error("ERROR writing to socket");
     
+
 	FILE * data;
-	
-	//char fin[6];
-	//strcpy(fin, "FIN");
+
     memset(buffer,0,MAX_PACKET_LEN);
 	int seq_num = 0; //UPDATE!!!!
 	
     n = recvfrom(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&serv_addr, &serv_len); //read from the socket
-	//printf("n: %d", n);
     if (n < 0) {error("ERROR reading from socket");}
-        //printf("%s\n",buffer);	//print server's response
-    /*
-    	if(strcmp(buffer, fin)) {
-    		n = sendto(sockfd,"FINACK", 7, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));		
-    		break;	
-    	}
-    */
+
 	printf("Receiving packet %d\n", seq_num);
 	data = fopen("received.data", "a");
-	//printf("buffer client: %s", buffer);
+
 	//Need to parse out sequence number
     fprintf(data, buffer);
-	
 	fclose(data);
 	
-    
     close(sockfd); //close socket
-    
     return 0;
 }
