@@ -44,7 +44,8 @@ int main(int argc, char *argv[])
 	
 //////////////////////////////////////////////////////////////////////////////////
 
-
+  int sent_syn = 0;
+    int was_first = 1;
   int seq_num = 0;
   while(1){
     int n;
@@ -54,9 +55,13 @@ int main(int argc, char *argv[])
 
     //read client's message
     n = recvfrom(sockfd,buffer, MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, &clilen);
-    printf("Sending packet %d %d SYN\n", seq_num, WINDOW_SIZE);
+      if (was_first == 1){
+          printf("Sending packet %d %d SYN\n", seq_num, WINDOW_SIZE);
+          was_first = 0;
+          sent_syn = 1;
+      }
     if (n < 0) error("ERROR reading from socket");
-
+      //printf("First: %d", was_first);
     FILE *fp;
     fp = fopen(buffer, "rb"); //filename
     if(fp != NULL) {
@@ -68,7 +73,11 @@ int main(int argc, char *argv[])
     	//snprintf(buff1, HEADER_SIZE, "%d", seq_num);	
     	fread(buffer, sizeof(char), MAX_PACKET_LEN-1, fp);//-HEADER_SIZE
     	//printf("buffer: %s", buffer);
-    	printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
+        if(was_first == 0 && sent_syn == 0) {
+           // printf("First: %d", was_first);
+            printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
+        }
+        sent_syn = 0;
     	n = sendto(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, clilen);
     	seq_num++;
     	if (n < 0) {
