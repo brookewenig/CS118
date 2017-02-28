@@ -49,9 +49,12 @@ int main(int argc, char *argv[])
   int seq_num = 0;
   while(1){
     int n;
-    char buffer[MAX_PACKET_LEN];
+    char buffer[MAX_PACKET_LEN-HEADER_SIZE];
+      char packet[MAX_PACKET_LEN];
+      
      
-    memset(buffer, 0, MAX_PACKET_LEN);	//reset memory
+    memset(buffer, 0, MAX_PACKET_LEN-HEADER_SIZE);	//reset memory
+      memset(packet, 0, MAX_PACKET_LEN);
 
     //read client's message
     n = recvfrom(sockfd,buffer, MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, &clilen);
@@ -61,24 +64,30 @@ int main(int argc, char *argv[])
           sent_syn = 1;
       }
     if (n < 0) error("ERROR reading from socket");
-      //printf("First: %d", was_first);
+    
     FILE *fp;
     fp = fopen(buffer, "rb"); //filename
     if(fp != NULL) {
       fseek(fp, 0, SEEK_END);
       long file_length = ftell(fp);
       rewind(fp);
-    	memset(buffer, 0, MAX_PACKET_LEN);
-    	//char buff1[HEADER_SIZE];
-    	//snprintf(buff1, HEADER_SIZE, "%d", seq_num);	
-    	fread(buffer, sizeof(char), MAX_PACKET_LEN-1, fp);//-HEADER_SIZE
-    	//printf("buffer: %s", buffer);
+    	memset(buffer, 0, MAX_PACKET_LEN-HEADER_SIZE);
+        memset(packet, 0, MAX_PACKET_LEN);
+        
+        //put header into a buffer
+        char header_buffer[HEADER_SIZE];
+    	snprintf(header_buffer, HEADER_SIZE, "%d", seq_num);
+        strcat(header_buffer, ":");
+    	fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);//-HEADER_SIZE
+        strcpy(packet, header_buffer);
+        strcat(packet, buffer);
+        //printf("Packet: %s", packet);
         if(was_first == 0 && sent_syn == 0) {
-           // printf("First: %d", was_first);
             printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
         }
         sent_syn = 0;
-    	n = sendto(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, clilen);
+        //OK so we're sending a packet with sequence number, newline, data
+    	n = sendto(sockfd,packet,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, clilen);
     	seq_num++;
     	if (n < 0) {
     	  error("ERROR writing to socket");
