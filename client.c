@@ -107,8 +107,6 @@ int main(int argc, char *argv[])
             strcat(packet_data, tmp);
             //printf("packet data: %s", packet_data);
             //printf("AAAAHERERER: %c", buffer[k]);
-            
-            //SEEMS to work, fix the rest to split on newline
         }
         
     }
