@@ -46,8 +46,14 @@ int main(int argc, char *argv[])
 
   int sent_syn = 0;
     int was_first = 1;
-  int seq_num = 0;
+    srand (time(NULL));
+    int seq_num = rand() % (MAX_SEQ_NUM + 1);
+  
   while(1){
+      //wrap
+      if(seq_num == MAX_SEQ_NUM) {
+          seq_num = 0;
+      }
     int n;
     char buffer[MAX_PACKET_LEN-HEADER_SIZE];
       char packet[MAX_PACKET_LEN];
