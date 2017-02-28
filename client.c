@@ -110,8 +110,10 @@ int main(int argc, char *argv[])
         }
         
     }
-    printf("seq: %s\n", seq_string);
-    printf("packet data: %s\n", packet_data);
+    seq_num = atoi(seq_string);
+    
+    //printf("seq: %d\n", seq_num);
+    //printf("packet data: %s\n", packet_data);
 	printf("Receiving packet %d\n", seq_num);
 	data = fopen("received.data", "a");
     //printf("packet_data %s", packet_data);
