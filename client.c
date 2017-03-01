@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
         //printf("seq: %d\n", seq_num);
         //printf("packet data: %s\n", packet_data);
         printf("Receiving packet %d\n", seq_num);
-        n = sendto(sockfd,seq_string,strlen(filename), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+        n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
         if (n < 0) {error("ERROR writing from socket");}
         data = fopen("received.data", "a");
         //printf("packet_data %s", packet_data);

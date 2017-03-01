@@ -79,13 +79,18 @@ int main(int argc, char *argv[])
       long file_length = ftell(fp);
       rewind(fp);
         int j;
+        //the number of total packet to send, divided into groups based on window
         for(j = 0; j < (file_length/(MAX_PACKET_LEN-HEADER_SIZE))/(WINDOW_SIZE/MAX_PACKET_LEN) + 1; j ++)
         {
             int k;
+            
+            //by default, should be 5 (send 5 packets at once
             for(k = 0; k < WINDOW_SIZE/MAX_PACKET_LEN; k++)
             {
                 memset(buffer, 0, MAX_PACKET_LEN-HEADER_SIZE);
                 memset(packet, 0, MAX_PACKET_LEN);
+                
+                //indicates EOF
                 if(feof(fp)){
                     break;
                 }
@@ -111,6 +116,8 @@ int main(int argc, char *argv[])
                  seq_num++;
             }
         }
+        //TODO: the ACKs are going to have to be recorded so we recognize loss
+        //This just checks the last in a window
         if (atoi(ack_num) == seq_num){
             seq_num++;
             //printf("here");
