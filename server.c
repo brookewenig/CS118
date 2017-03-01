@@ -7,7 +7,7 @@
 #include <sys/wait.h>	/* for the waitpid() system call */
 #include <signal.h>	/* signal name macros, and the kill() prototype */
 
-#define MAX_PACKET_LEN 102
+#define MAX_PACKET_LEN 1024
 #define MAX_SEQ_NUM 30720
 #define WINDOW_SIZE 5120
 #define RTO 500
@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
     int was_first = 1;
     srand (time(NULL));
     int seq_num = rand() % (MAX_SEQ_NUM + 1);
+    char ack_num[HEADER_SIZE];
   
   while(1){
       //wrap
@@ -77,27 +78,37 @@ int main(int argc, char *argv[])
       fseek(fp, 0, SEEK_END);
       long file_length = ftell(fp);
       rewind(fp);
-    	memset(buffer, 0, MAX_PACKET_LEN-HEADER_SIZE);
-        memset(packet, 0, MAX_PACKET_LEN);
+        int j;
         
-        //put header into a buffer
-        char header_buffer[HEADER_SIZE];
-    	snprintf(header_buffer, HEADER_SIZE, "%d", seq_num);
-        strcat(header_buffer, ":");
-    	fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);//-HEADER_SIZE
-        strcpy(packet, header_buffer);
-        strcat(packet, buffer);
-        //printf("Packet: %s", packet);
-        if(was_first == 0 && sent_syn == 0) {
-            printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
+        for(j = 0; j < file_length/(MAX_PACKET_LEN-HEADER_SIZE) + 2; j ++)
+        {
+            memset(buffer, 0, MAX_PACKET_LEN-HEADER_SIZE);
+            memset(packet, 0, MAX_PACKET_LEN);
+            
+            //put header into a buffer
+            char header_buffer[HEADER_SIZE];
+            snprintf(header_buffer, HEADER_SIZE, "%d", seq_num);
+            strcat(header_buffer, ":");
+            fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);//-HEADER_SIZE
+            strcpy(packet, header_buffer);
+            strcat(packet, buffer);
+            //printf("Packet: %s", packet);
+            if(was_first == 0 && sent_syn == 0) {
+                printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
+            }
+            sent_syn = 0;
+            //OK so we're sending a packet with sequence number, colon, data
+            n = sendto(sockfd,packet,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, clilen);
+            if (n < 0) error("ERROR reading from socket");
+            n = recvfrom(sockfd,ack_num, MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, &clilen);
+            if (atoi(ack_num) == seq_num){
+                seq_num++;
+                //printf("here");
+            }
+            if (n < 0) {
+              error("ERROR writing to socket");
+            }
         }
-        sent_syn = 0;
-        //OK so we're sending a packet with sequence number, newline, data
-    	n = sendto(sockfd,packet,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, clilen);
-    	seq_num++;
-    	if (n < 0) {
-    	  error("ERROR writing to socket");
-    	}	
     }
     else {
   	 printf("Nope. Try another file.");

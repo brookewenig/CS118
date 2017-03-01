@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <strings.h>
 
-#define MAX_PACKET_LEN 102
+#define MAX_PACKET_LEN 1024
 #define MAX_SEQ_NUM 30720
 #define WINDOW_SIZE 5120
 #define RTO 500
@@ -72,53 +72,62 @@ int main(int argc, char *argv[])
 
 	FILE * data;
 
-    memset(buffer,0,MAX_PACKET_LEN);
+   
 	int seq_num = 0;
     char seq_string[HEADER_SIZE];
-    memset(seq_string, 0, HEADER_SIZE);
     int is_first = 1;
-	
-    n = recvfrom(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&serv_addr, &serv_len); //read from the socket
-    if (n < 0) {error("ERROR reading from socket");}
     
-    //now parse the buffer at the first colon
-    int k;
-    int has_seen_col = 0;
-    
-    for (k = 0; k < strlen(buffer); k++){
-        if(has_seen_col == 0){
-            char tmp2[4];
-            sprintf(tmp2, "%c", buffer[k]);
-            //printf("AAAAHERERER: %c", buffer[k]);
-           // printf("tmp2: %s", tmp2);
-            
-            if(strcmp(tmp2, ":") == 0){
-                //printf("herheere");
-                has_seen_col = 1;
+    while(1){
+        memset(buffer,0,MAX_PACKET_LEN);
+        memset(seq_string, 0, HEADER_SIZE);
+        memset(packet_data,0,MAX_PACKET_LEN-HEADER_SIZE);
+        
+        n = recvfrom(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&serv_addr, &serv_len); //read from the socket
+        if (n < 0) {error("ERROR reading from socket");}
+          //printf("buffer: %s", buffer);
+        //now parse the buffer at the first colon
+        int k;
+        int has_seen_col = 0;
+        
+        for (k = 0; k < strlen(buffer); k++){
+            if(has_seen_col == 0){
+                char tmp2[4];
+                sprintf(tmp2, "%c", buffer[k]);
+                //printf("AAAAHERERER: %c", buffer[k]);
+                //printf("tmp2: %s", tmp2);
+                
+                if(strcmp(tmp2, ":") == 0){
+                    //printf("herheere");
+                    has_seen_col = 1;
+                }
+                else {
+                    strcat(seq_string, tmp2);
+                }
+                
             }
             else {
-                strcat(seq_string, tmp2);
+                //printf("herheere");
+                char tmp[4];
+                sprintf(tmp, "%c", buffer[k]);
+                strcat(packet_data, tmp);
+                //printf("packet data: %s", packet_data);
+                //printf("AAAAHERERER: %c", buffer[k]);
             }
             
         }
-        else {
-            char tmp[4];
-            sprintf(tmp, "%c", buffer[k]);
-            strcat(packet_data, tmp);
-            //printf("packet data: %s", packet_data);
-            //printf("AAAAHERERER: %c", buffer[k]);
-        }
+        //printf("made it through loop");
+        seq_num = atoi(seq_string);
         
+        //printf("seq: %d\n", seq_num);
+        //printf("packet data: %s\n", packet_data);
+        printf("Receiving packet %d\n", seq_num);
+        n = sendto(sockfd,seq_string,strlen(filename), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+        if (n < 0) {error("ERROR writing from socket");}
+        data = fopen("received.data", "a");
+        //printf("packet_data %s", packet_data);
+        fprintf(data, packet_data);
+        fclose(data);
     }
-    seq_num = atoi(seq_string);
-    
-    //printf("seq: %d\n", seq_num);
-    //printf("packet data: %s\n", packet_data);
-	printf("Receiving packet %d\n", seq_num);
-	data = fopen("received.data", "a");
-    //printf("packet_data %s", packet_data);
-    fprintf(data, packet_data);
-	fclose(data);
 	
     close(sockfd); //close socket
     return 0;
