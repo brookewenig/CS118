@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     cli_addr.sin_port = htons(0);
     
     if (bind(sockfd,(struct sockaddr *)&cli_addr,sizeof(cli_addr)) < 0) //establish a connection to the server
-        error("ERROR bind failed hihihihi");
+        error("ERROR bind failed");
 
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET; //initialize server's address
