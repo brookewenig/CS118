@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
             if(has_seen_col == 0){
                 char tmp2[4];
                 sprintf(tmp2, "%c", buffer[k]);
-                //printf("AAAAHERERER: %c", buffer[k]);
+               
                 //printf("tmp2: %s", tmp2);
                 
                 if(strcmp(tmp2, ":") == 0){
