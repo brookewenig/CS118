@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   int sent_syn = 0;
     int was_first = 1;
     srand (time(NULL));
-    int seq_num = rand() % (MAX_SEQ_NUM + 1);
+    int seq_num = 0;//rand() % (MAX_SEQ_NUM + 1);
     char ack_num[HEADER_SIZE];
     int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
     
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
       }
     int n;
     char buffer[MAX_PACKET_LEN-HEADER_SIZE];
-      char packet[MAX_PACKET_LEN];
+    char packet[MAX_PACKET_LEN];
       
      
     memset(buffer, 0, MAX_PACKET_LEN-HEADER_SIZE);	//reset memory
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
                 if (!(n < 0)) {
                   ack_num_received[k] = atoi(ack_num);
                 }
-                seq_num += sizeof(buffer);
+                seq_num += strlen(buffer) + 1;
             }
        }
         //TODO: the ACKs are going to have to be recorded so we recognize loss

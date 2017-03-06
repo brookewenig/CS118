@@ -13,6 +13,12 @@
 #define RTO 500
 #define HEADER_SIZE 20
 
+struct Packet_Data {
+    int seq_key;
+    char whole_packet[MAX_PACKET_LEN];
+};
+
+
 void error(char *msg)
 {
     perror(msg);
@@ -64,6 +70,9 @@ int main(int argc, char *argv[])
 //////////////////////////////////////////////////////////////////////////////////
 
 
+    int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
+    struct Packet_Data packet_array[num_structs]; //Number of packets saved. Number == window/packet len. Here it is 5
+    
     printf("Sending packet SYN\n");
 
     n = sendto(sockfd,filename,strlen(filename), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
@@ -75,6 +84,7 @@ int main(int argc, char *argv[])
 
    
 	int seq_num = 0;
+    int prev_seq_num = 0;
     char seq_string[HEADER_SIZE];
     int is_first = 1;
     
@@ -110,8 +120,6 @@ int main(int argc, char *argv[])
                 char tmp[4];
                 sprintf(tmp, "%c", buffer[k]);
                 strcat(packet_data, tmp);
-                //printf("packet data: %s", packet_data);
-                //printf("AAAAHERERER: %c", buffer[k]);
             }
             
         }
@@ -129,10 +137,34 @@ int main(int argc, char *argv[])
             printf("Receiving packet %d\n", seq_num);
             n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
             if (n < 0) {error("ERROR writing from socket");}
-            data = fopen("received.data", "a");
-            //printf("packet_data %s", packet_data);
-            fprintf(data, packet_data);
-            fclose(data);
+            
+            if (prev_seq_num == 0) {
+                data = fopen("received.data", "a");
+                //printf("packet_data %s", packet_data);
+                fprintf(data, packet_data);
+                fclose(data);
+                prev_seq_num = seq_num;
+            }
+
+            else if (seq_num == prev_seq_num + (strlen(packet_data) +1)) {
+                printf("seq_num: %d; prev_seq_num: %d; packet data length: %d\n", seq_num, prev_seq_num, strlen(packet_data));
+                // Don't want to write unconditionally
+                data = fopen("received.data", "a");
+                //printf("packet_data %s", packet_data);
+                fprintf(data, packet_data);
+                fclose(data);
+                prev_seq_num = seq_num;
+            }
+            else { // END OF FILE
+                printf("EOFFFFFF");
+                data = fopen("received.data", "a");
+                //printf("packet_data %s", packet_data);
+                fprintf(data, packet_data);
+                fclose(data);
+                prev_seq_num = seq_num;
+            }
+
+            
         }
     }
 
