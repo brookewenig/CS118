@@ -5,6 +5,7 @@
 #include <netdb.h>      // define structures like hostent
 #include <stdlib.h>
 #include <strings.h>
+#include <time.h>
 
 #define MAX_PACKET_LEN 1024
 #define MAX_SEQ_NUM 30720
@@ -89,6 +90,7 @@ int main(int argc, char *argv[])
         int k;
         int has_seen_col = 0;
         
+        
         for (k = 0; k < strlen(buffer); k++){
             if(has_seen_col == 0){
                 char tmp2[4];
@@ -97,7 +99,6 @@ int main(int argc, char *argv[])
                 //printf("tmp2: %s", tmp2);
                 
                 if(strcmp(tmp2, ":") == 0){
-                    //printf("herheere");
                     has_seen_col = 1;
                 }
                 else {
@@ -106,7 +107,6 @@ int main(int argc, char *argv[])
                 
             }
             else {
-                //printf("herheere");
                 char tmp[4];
                 sprintf(tmp, "%c", buffer[k]);
                 strcat(packet_data, tmp);
@@ -115,19 +115,27 @@ int main(int argc, char *argv[])
             }
             
         }
+    
         //printf("made it through loop");
         seq_num = atoi(seq_string);
         
         //printf("seq: %d\n", seq_num);
         //printf("packet data: %s\n", packet_data);
-        printf("Receiving packet %d\n", seq_num);
-        n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-        if (n < 0) {error("ERROR writing from socket");}
-        data = fopen("received.data", "a");
-        //printf("packet_data %s", packet_data);
-        fprintf(data, packet_data);
-        fclose(data);
+        if(strcmp("FIN", packet_data) == 0){
+            printf("Receiving packet %d FIN\n", seq_num);
+            break;
+        }
+        else{
+            printf("Receiving packet %d\n", seq_num);
+            n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+            if (n < 0) {error("ERROR writing from socket");}
+            data = fopen("received.data", "a");
+            //printf("packet_data %s", packet_data);
+            fprintf(data, packet_data);
+            fclose(data);
+        }
     }
+
 	
     close(sockfd); //close socket
     return 0;
