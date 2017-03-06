@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
                 char header_buffer[HEADER_SIZE];
                 snprintf(header_buffer, HEADER_SIZE, "%d", seq_num);
                 strcat(header_buffer, ":");
-                fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);//-HEADER_SIZE
+                fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
                 strcpy(packet, header_buffer);
                 strcat(packet, buffer);
                 //printf("Packet: %s", packet);
@@ -113,13 +113,13 @@ int main(int argc, char *argv[])
                 if (n < 0) {
                   error("ERROR writing to socket");
                 }
-                 seq_num++;
+                seq_num += sizeof(buffer);
             }
         }
         //TODO: the ACKs are going to have to be recorded so we recognize loss
         //This just checks the last in a window
         if (atoi(ack_num) == seq_num){
-            seq_num++;
+            seq_num += sizeof(buffer);
             //printf("here");
         }
     }
