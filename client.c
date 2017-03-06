@@ -163,7 +163,8 @@ int main(int argc, char *argv[])
                 fclose(data);
                 prev_seq_num = seq_num;
             }
-
+            
+            ///FIXME
             
         }
     }
