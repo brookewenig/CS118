@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
                 prev_seq_num = seq_num;
             }
 
-            else if (seq_num == prev_seq_num + (strlen(packet_data) +1)) {
+            else{//else if (seq_num == prev_seq_num + (strlen(packet_data) +1)) {
                 //printf("seq_num: %d; prev_seq_num: %d; packet data length: %d\n", seq_num, prev_seq_num, strlen(packet_data));
                 // Don't want to write unconditionally
                 data = fopen("received.data", "a");
@@ -156,14 +156,14 @@ int main(int argc, char *argv[])
                 fclose(data);
                 prev_seq_num = seq_num;
             }
-            else { // END OF FILE
+            /*else { // END OF FILE
                 //printf("EOFFFFFF");
                 data = fopen("received.data", "a");
                 //printf("packet_data %s", packet_data);
                 fprintf(data, packet_data);
                 fclose(data);
                 prev_seq_num = seq_num;
-            }
+            } */
             
             ///FIXME
             

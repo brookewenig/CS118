@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     rewind(fp);
     int j;
     //the number of total packet to send, divided into groups based on window
-    for(j = 0; j < (file_length/(MAX_PACKET_LEN-HEADER_SIZE))/(WINDOW_SIZE/MAX_PACKET_LEN) + 1; j ++)
+        while(!feof(fp))//for(j = 0; j < (file_length/(MAX_PACKET_LEN-HEADER_SIZE))/(WINDOW_SIZE/MAX_PACKET_LEN) + 40; j ++)
     {
             //by default, should be 5 (send 5 packets at once)
             for(k = 0; k < WINDOW_SIZE/MAX_PACKET_LEN; k++)
@@ -157,6 +157,7 @@ int main(int argc, char *argv[])
             seq_num += sizeof(buffer);
             //printf("here");
         }
+        //printf("LENGTH: %ld", file_length);
     }
     else {
   	 printf("Nope. Try another file.");
