@@ -62,10 +62,7 @@ int main(int argc, char *argv[])
     int ack_num_received[num_structs];
     
   while(1){
-      //wrap
-      if(seq_num == MAX_SEQ_NUM) {
-          seq_num = 0;
-      }
+      
     int n;
     char buffer[MAX_PACKET_LEN-HEADER_SIZE];
     char packet[MAX_PACKET_LEN];
@@ -97,6 +94,9 @@ int main(int argc, char *argv[])
             //by default, should be 5 (send 5 packets at once)
             for(k = 0; k < WINDOW_SIZE/MAX_PACKET_LEN; k++)
             {
+                if(seq_num > MAX_SEQ_NUM) {
+                    seq_num = seq_num - MAX_SEQ_NUM;
+                }
                 memset(buffer, 0, MAX_PACKET_LEN-HEADER_SIZE);
                 memset(packet, 0, MAX_PACKET_LEN);
                 
@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
                         }
                     }
                     if (found_ack == 0) {
+                        printf("In found ack");
                         if (time(NULL) - packet_array[k].start_time > RTO) {
                             // RETRANSMIT!!!
                             printf("Sending packet %d %d Retransmission\n", packet_array[k].seq_key, WINDOW_SIZE);
@@ -151,8 +152,7 @@ int main(int argc, char *argv[])
                 seq_num += strlen(buffer) + 1;
             }
        }
-        //TODO: the ACKs are going to have to be recorded so we recognize loss
-        //This just checks the last in a window
+        
     if (atoi(ack_num) == seq_num){
             seq_num += sizeof(buffer);
             //printf("here");

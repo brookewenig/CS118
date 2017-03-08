@@ -139,6 +139,7 @@ int main(int argc, char *argv[])
             if (n < 0) {error("ERROR writing from socket");}
             
             if (prev_seq_num == 0) {
+                //printf("first packet");
                 data = fopen("received.data", "a");
                 //printf("packet_data %s", packet_data);
                 fprintf(data, packet_data);
@@ -147,7 +148,7 @@ int main(int argc, char *argv[])
             }
 
             else if (seq_num == prev_seq_num + (strlen(packet_data) +1)) {
-                printf("seq_num: %d; prev_seq_num: %d; packet data length: %d\n", seq_num, prev_seq_num, strlen(packet_data));
+                //printf("seq_num: %d; prev_seq_num: %d; packet data length: %d\n", seq_num, prev_seq_num, strlen(packet_data));
                 // Don't want to write unconditionally
                 data = fopen("received.data", "a");
                 //printf("packet_data %s", packet_data);
@@ -156,7 +157,7 @@ int main(int argc, char *argv[])
                 prev_seq_num = seq_num;
             }
             else { // END OF FILE
-                printf("EOFFFFFF");
+                //printf("EOFFFFFF");
                 data = fopen("received.data", "a");
                 //printf("packet_data %s", packet_data);
                 fprintf(data, packet_data);
