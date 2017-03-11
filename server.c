@@ -172,8 +172,14 @@ int main(int argc, char *argv[])
     if (n < 0) {
         error("ERROR writing to socket");
     }
+      char wait[20];
     printf("Sending packet %d %d FIN\n", seq_num, WINDOW_SIZE);
-    break;
+      if(recvfrom(sockfd,wait, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen) >= 0){
+          printf("Receiving packet FINACK \n");
+          //time_t timer = time(NULL);
+          sleep((2*RTO)/1000);
+      }
+   // break;
   }
      
  close(sockfd); 

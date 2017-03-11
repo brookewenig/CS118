@@ -131,6 +131,7 @@ int main(int argc, char *argv[])
         //printf("packet data: %s\n", packet_data);
         if(strcmp("FIN", packet_data) == 0){
             printf("Receiving packet %d FIN\n", seq_num);
+            sendto(sockfd,"FINACK", 7, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
             break;
         }
         else{
