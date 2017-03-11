@@ -176,10 +176,20 @@ int main(int argc, char *argv[])
     printf("Sending packet %d %d FIN\n", seq_num, WINDOW_SIZE);
       if(recvfrom(sockfd,wait, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen) >= 0){
           printf("Receiving packet FINACK \n");
-          //time_t timer = time(NULL);
-          sleep((2*RTO)/1000);
+          //clock_t timer_start = clock();//(clock()/CLOCKS_PER_SEC)/1000;
+          time_t timer ;
+          time(&timer);
+          time_t timer2;
+          time(&timer2);
+          //timer = timer - timer2;
+          //printf("TIMEEE: %d", timer);
+          while(1) {
+              if( 1000*(time(&timer)-timer2) > 2*RTO){
+                  break;
+              }
+          }
       }
-   // break;
+   //break;
   }
      
  close(sockfd); 
