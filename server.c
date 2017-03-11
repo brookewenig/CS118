@@ -122,14 +122,13 @@ int main(int argc, char *argv[])
                     }
                     if (found_ack == 0) {
                         printf("In found ack");
-                        if (time(NULL) - packet_array[k].start_time > RTO) {
+                        if( 1000*(time(NULL)-packet_array[k].start_time) > RTO){
                             // RETRANSMIT!!!
                             printf("Sending packet %d %d Retransmission\n", packet_array[k].seq_key, WINDOW_SIZE);
                             n = sendto(sockfd,packet_array[k].whole_packet,MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, clilen);
                             if (n < 0) error("ERROR reading from socket");
                         }
                     }
-                    
                 }
                 
                 packet_array[k].seq_key = seq_num;
