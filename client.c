@@ -18,6 +18,11 @@ struct Packet_Data {
     char whole_packet[MAX_PACKET_LEN];
 };
 
+struct Packet {
+    int sequence_num;
+    char full_data[MAX_PACKET_LEN-HEADER_SIZE];
+    int size;
+};
 
 void error(char *msg)
 {
@@ -87,13 +92,15 @@ int main(int argc, char *argv[])
     int prev_seq_num = 0;
     char seq_string[HEADER_SIZE];
     int is_first = 1;
+    struct Packet receivedData;
     
     while(1){
         memset(buffer,0,MAX_PACKET_LEN);
         memset(seq_string, 0, HEADER_SIZE);
         memset(packet_data,0,MAX_PACKET_LEN-HEADER_SIZE);
         
-        n = recvfrom(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&serv_addr, &serv_len); //read from the socket
+        memset((char*)&receivedData, 0, sizeof(receivedData));
+        n = recvfrom(sockfd, &receivedData,sizeof(receivedData), 0, (struct sockaddr *)&serv_addr, &serv_len); //read from the socket
         if (n < 0) {error("ERROR reading from socket");}
           //printf("buffer: %s", buffer);
         //now parse the buffer at the first colon
@@ -102,6 +109,7 @@ int main(int argc, char *argv[])
         
         //printf("buffer: %s\n", buffer);
         
+        /*
         for (k = 0; k < strlen(buffer); k++){
             if(has_seen_col == 0){
                 char tmp2[4];
@@ -111,6 +119,7 @@ int main(int argc, char *argv[])
                 
                 if(strcmp(tmp2, ":") == 0){
                     has_seen_col = 1;
+                    //break;
                 }
                 else {
                     strcat(seq_string, tmp2);
@@ -118,18 +127,25 @@ int main(int argc, char *argv[])
                 
             }
             else {
-                char tmp[4];
+                //char tmp[4];
                 //printf("buffer k: %c, %d\n", buffer[k], k);
-                sprintf(tmp, "%c", buffer[k]);
-                strcat(packet_data, tmp);
+                //sprintf(tmp, "%c", buffer[k]);
+                //strcat(packet_data, tmp);
                 //printf("packet k: %s, %d\n", packet_data, k);
+                bzero(packet_data, 1004);
+                //printf("seq string: %s", seq_string);
+                //printf("buff: %s\n", buffer);
+                memcpy(packet_data, buffer + strlen(seq_string) + 1, 1004);
             }
             
         }
+         */
+       
     
-        //printf("made it through loop");
-        seq_num = atoi(seq_string);
-        
+        //seq_num = atoi(seq_string);
+        seq_num = receivedData.sequence_num;
+        //memcpy(packet_data, buffer+k+1, 21);
+       // packet_data = receivedData.full_data;
         //printf("seq: %d\n", seq_num);
         //printf("packet data: %s\n", packet_data);
         if(strcmp("FIN", packet_data) == 0){
@@ -144,8 +160,14 @@ int main(int argc, char *argv[])
             
             //printf("first packet");
             data = fopen("received.data", "a");
+
+            //data = fopen("received2.data", "a");
+            // fwrite(packet_data, sizeof(char), 21, data); // will need to update seq_num in both places
+            // fclose(data);
+
             //printf("packet_data %s, %lu", packet_data, strlen(packet_data));
-            fputs(packet_data, data);
+            //fputs(buffer+k+1, data); // MIGHT NEED TO UPDATE TO FWRITE
+            fwrite(receivedData.full_data, 1, receivedData.size, data);
             fclose(data);
 
         }

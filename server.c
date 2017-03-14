@@ -14,6 +14,12 @@
 #define RTO 500
 #define HEADER_SIZE 20
 
+struct Packet {
+    int sequence_num;
+    char full_data[MAX_PACKET_LEN-HEADER_SIZE];
+    int size;
+};
+
 void error(char *msg)
 {
     perror(msg);
@@ -84,6 +90,10 @@ int main(int argc, char *argv[])
     if(fp != NULL) {
       status = 1;
       int isfirst = 0;
+
+      FILE * data; // for debugging
+        struct Packet fileToSend;
+
     //the number of total packet to send, divided into groups based on window
       while(!feof(fp)){//for(j = 0; j < (file_length/(MAX_PACKET_LEN-HEADER_SIZE))/(WINDOW_SIZE/MAX_PACKET_LEN) + 40; j ++)
             //by default, should be 5 (send 5 packets at once)
@@ -104,20 +114,50 @@ int main(int argc, char *argv[])
                 snprintf(header_buffer, HEADER_SIZE, "%d", seq_num);
                 strcat(header_buffer, ":");
                 size_t val = fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
-                //printf("val: %d", val);
+
+               // printf("val: %zd\n", val);
                 strcpy(packet, header_buffer);
 
+                // int i;
+                // for ( i=0; i < val; i++){
+                //   printf("i: %d, buffer: %x\n",i, buffer[i]);
+                // }
 
-                strcat(packet, buffer);
+                // DOESN'T LIKE THIS STRCAT
+                //strcat(packet, buffer);
+                memcpy(packet+strlen(header_buffer)+1, buffer, val);
+
+                 //data = fopen("received2.data", "a");
+                 //fwrite(packet+strlen(header_buffer)+1, sizeof(char), val, data);
+                 //fclose(data);
 
                 //printf("packet: %s\n", packet);
-                //printf("Packet: %s", packet);
+
                 if(was_first == 0 && sent_syn == 0) {
                     printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
                 }
+                fileToSend.sequence_num = seq_num;
+                fileToSend.size = val; //sizeof(buffer);
+                memcpy(fileToSend.full_data, buffer, fileToSend.size);
+                //strcpy(fileToSend.full_data, buffer);
+                
+                /*
+                printf("buffer size: %d", sizeof(buffer));
+                data = fopen("received3.data", "a");
+                fwrite(buffer, 1, strlen(buffer), data);
+                fclose(data);
+                
+                data = fopen("received2.data", "a");
+                fwrite(fileToSend.full_data, 1, fileToSend.size, data);
+                fclose(data);
+                 */
+                
+                
+                //fileToSend.full_data = buffer;
+                
                 sent_syn = 0;
                 //OK so we're sending a packet with sequence number, colon, data
-                n = sendto(sockfd,packet,MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, clilen);
+                n = sendto(sockfd,&fileToSend,sizeof(fileToSend), 0, (struct sockaddr *)&cli_addr, clilen);
                 if (n < 0) error("ERROR reading from socket");
                 n = recvfrom(sockfd,ack_num, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen);
                 seq_num += val;
