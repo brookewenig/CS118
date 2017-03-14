@@ -112,9 +112,20 @@ int main(int argc, char *argv[])
                 char header_buffer[HEADER_SIZE];
                 snprintf(header_buffer, HEADER_SIZE, "%d", seq_num);
                 strcat(header_buffer, ":");
-                fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
+                int val = fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
+                printf("val: %d", val);
+                //printf("Len of packet1: %lu\n", strlen(packet));
                 strcpy(packet, header_buffer);
-                strcat(packet, buffer);
+                //printf("Len of packet2: %lu\n", strlen(packet));
+                printf("\nsize of buffer: %lu, len of buffer: %lu\n", sizeof(buffer), strlen(buffer));
+
+                memcpy(packet+strlen(header_buffer), (char *)buffer, val);
+
+
+                //strcat(packet, buffer); /// FIXXXXXXXX
+
+                //printf("\nBuffer: %s\n", buffer);
+                printf("\nLen of packet: %lu\n", strlen(packet));
 
                 // int j;
                 // for (j=0; j< num_structs; j++){
@@ -154,6 +165,8 @@ int main(int argc, char *argv[])
                 }
                 sent_syn = 0;
                 //OK so we're sending a packet with sequence number, colon, data
+                //printf("Len of packet: %lu", strlen(packet));
+
                 n = sendto(sockfd,packet,MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, clilen);
                 if (n < 0) error("ERROR reading from socket");
                 n = recvfrom(sockfd,ack_num, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen);

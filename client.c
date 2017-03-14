@@ -94,12 +94,14 @@ int main(int argc, char *argv[])
         memset(packet_data,0,MAX_PACKET_LEN-HEADER_SIZE);
         
         n = recvfrom(sockfd,buffer,MAX_PACKET_LEN-1, 0, (struct sockaddr *)&serv_addr, &serv_len); //read from the socket
+        //printf("n: %d", );
         if (n < 0) {error("ERROR reading from socket");}
           //printf("buffer: %s", buffer);
         //now parse the buffer at the first colon
         int k;
         int has_seen_col = 0;
         
+        //int save_k = 0;
         
         for (k = 0; k < strlen(buffer); k++){
             if(has_seen_col == 0){
@@ -110,19 +112,25 @@ int main(int argc, char *argv[])
                 
                 if(strcmp(tmp2, ":") == 0){
                     has_seen_col = 1;
+                    //save_k = k;
+                    break;
                 }
                 else {
                     strcat(seq_string, tmp2);
                 }
                 
             }
-            else {
-                char tmp[4];
-                sprintf(tmp, "%c", buffer[k]);
-                strcat(packet_data, tmp);
-            }
-            
+            // else {
+            //     char tmp[4];
+            //     sprintf(tmp, "%c", buffer[k]);
+            //     strcat(packet_data, tmp);
+            // }
         }
+        //printf("k: %d", save_k);
+
+        //printf("Buffer plus k: %s", buffer+save_k+1);
+        //printf("len buffer: %d", strlen(buffer)-save_k-1);
+        memcpy(packet_data, buffer+k+1, strlen(buffer)-k-1);
     
         //printf("made it through loop");
         seq_num = atoi(seq_string);
@@ -139,24 +147,24 @@ int main(int argc, char *argv[])
             n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
             if (n < 0) {error("ERROR writing from socket");}
             
-            if (prev_seq_num == 0) {
+            // if (prev_seq_num == 0) {
                 //printf("first packet");
                 data = fopen("received.data", "a");
                 //printf("packet_data %s", packet_data);
                 fprintf(data, packet_data);
                 fclose(data);
-                prev_seq_num = seq_num;
-            }
+            //     prev_seq_num = seq_num;
+            // }
 
-            else{//else if (seq_num == prev_seq_num + (strlen(packet_data) +1)) {
-                //printf("seq_num: %d; prev_seq_num: %d; packet data length: %d\n", seq_num, prev_seq_num, strlen(packet_data));
-                // Don't want to write unconditionally
-                data = fopen("received.data", "a");
-                //printf("packet_data %s", packet_data);
-                fprintf(data, packet_data);
-                fclose(data);
-                prev_seq_num = seq_num;
-            }
+            // else{//else if (seq_num == prev_seq_num + (strlen(packet_data) +1)) {
+            //     //printf("seq_num: %d; prev_seq_num: %d; packet data length: %d\n", seq_num, prev_seq_num, strlen(packet_data));
+            //     // Don't want to write unconditionally
+            //     data = fopen("received.data", "a");
+            //     //printf("packet_data %s", packet_data);
+            //     fprintf(data, packet_data);
+            //     fclose(data);
+            //     prev_seq_num = seq_num;
+            // }
             /*else { // END OF FILE
                 //printf("EOFFFFFF");
                 data = fopen("received.data", "a");
