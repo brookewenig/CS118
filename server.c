@@ -58,14 +58,14 @@ int main(int argc, char *argv[])
   char ack_num[HEADER_SIZE];
   int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
   
-  struct Packet_Data packet_array[num_structs]; //Number of packets saved. Number == window/packet len. Here it is 5
-  int ack_num_received[num_structs];
+  // struct Packet_Data packet_array[num_structs]; //Number of packets saved. Number == window/packet len. Here it is 5
+  // int ack_num_received[num_structs];
 
-  int l;
-  for (l =0; l<num_structs; l++){
-      packet_array[l].seq_key = -2;
-      ack_num_received[l] = -1;
-  }
+  // int l;
+  // for (l =0; l<num_structs; l++){
+  //     packet_array[l].seq_key = -2;
+  //     ack_num_received[l] = -1;
+  // }
     
   while(1){
       
@@ -116,36 +116,36 @@ int main(int argc, char *argv[])
                 strcpy(packet, header_buffer);
                 strcat(packet, buffer);
 
-                int j;
-                for (j=0; j< num_structs; j++){
-                  printf("J: Packet Array %d\n",packet_array[j].seq_key);
-                }
+                // int j;
+                // for (j=0; j< num_structs; j++){
+                //   printf("J: Packet Array %d\n",packet_array[j].seq_key);
+                // }
 
-                if (isfirst !=0) {
-                  int f;
-                  int found_ack = 0;
-                  for (f = 0; f < num_structs; f++) {
-                      if (packet_array[k].seq_key == ack_num_received[f]){
-                          found_ack = 1;
-                          printf("Same ACK: %d, K: %d\n", ack_num_received[f], k);
-                      }
-                  }
-                  //can't detect until k wraps, so we need detect if this is curr k or next
-                  if (found_ack == 0) {
-                      printf("In found ack");
-                      if( 1000*(time(NULL)-packet_array[k].start_time) > RTO){
-                          // RETRANSMIT!!!
-                          printf("Sending packet %d %d Retransmission\n", packet_array[k].seq_key, WINDOW_SIZE);
-                          n = sendto(sockfd,packet_array[k].whole_packet,MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, clilen);
-                          if (n < 0) error("ERROR reading from socket");
-                      }
-                    }
-                }
+                // if (isfirst !=0) {
+                //   int f;
+                //   int found_ack = 0;
+                //   for (f = 0; f < num_structs; f++) {
+                //       if (packet_array[k].seq_key == ack_num_received[f]){
+                //           found_ack = 1;
+                //           printf("Same ACK: %d, K: %d\n", ack_num_received[f], k);
+                //       }
+                //   }
+                //   //can't detect until k wraps, so we need detect if this is curr k or next
+                //   if (found_ack == 0) {
+                //       printf("In found ack");
+                //       if( 1000*(time(NULL)-packet_array[k].start_time) > RTO){
+                //           // RETRANSMIT!!!
+                //           printf("Sending packet %d %d Retransmission\n", packet_array[k].seq_key, WINDOW_SIZE);
+                //           n = sendto(sockfd,packet_array[k].whole_packet,MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, clilen);
+                //           if (n < 0) error("ERROR reading from socket");
+                //       }
+                //     }
+                // }
 
                 
-                packet_array[k].seq_key = seq_num;
-                strcpy(packet_array[k].whole_packet, packet);
-                packet_array[k].start_time = time(NULL);
+                // packet_array[k].seq_key = seq_num;
+                // strcpy(packet_array[k].whole_packet, packet);
+                // packet_array[k].start_time = time(NULL);
                 
                 
                 //printf("Packet: %s", packet);
@@ -157,9 +157,9 @@ int main(int argc, char *argv[])
                 n = sendto(sockfd,packet,MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, clilen);
                 if (n < 0) error("ERROR reading from socket");
                 n = recvfrom(sockfd,ack_num, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen);
-                if (!(n < 0)) {
-                  ack_num_received[k] = atoi(ack_num);
-                }
+                // if (!(n < 0)) {
+                //   ack_num_received[k] = atoi(ack_num);
+                // }
                 seq_num += strlen(buffer) + 1;
             }
             isfirst = 1;
