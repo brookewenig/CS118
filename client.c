@@ -110,7 +110,6 @@ SEND:
     time(&timer);
     time_t timer2;
     time(&timer2);
-
     
     while(1){
         //memset(buffer,0,MAX_PACKET_LEN);
@@ -132,6 +131,7 @@ SEND:
                 if (n < 0) {error("ERROR writing from socket");}
                 
                 seq_num = receivedData.sequence_num;
+                prev_seq_num = seq_num;
                 //printf("first packet");
                 data = fopen("received.data", "a");
                 fwrite(receivedData.full_data, 1, receivedData.size, data);
@@ -146,23 +146,35 @@ SEND:
             //now parse the buffer at the first colon
             int k;
             //int has_seen_col = 0;
-
+        
             seq_num = receivedData.sequence_num;
-
-            if(strcmp("FIN", receivedData.full_data) == 0){
-                printf("Receiving packet %d FIN\n", seq_num);
-                sendto(sockfd,"FINACK", 7, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-                break;
+            
+            if(seq_num <= prev_seq_num + 1024) {
+                if(strcmp("FIN", receivedData.full_data) == 0){
+                    printf("Receiving packet %d FIN\n", seq_num);
+                    sendto(sockfd,"FINACK", 7, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+                    break;
+                }
+                else{
+                    printf("Receiving packet %d\n", seq_num);
+                    n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+                    if (n < 0) {error("ERROR writing from socket");}
+                    
+                    //printf("first packet");
+                    data = fopen("received.data", "a");
+                    fwrite(receivedData.full_data, 1, receivedData.size, data);
+                    fclose(data);
+                }
+                prev_seq_num = seq_num;
             }
-            else{
+            else {
+                //packet out of order, deal with it somehow
+                printf("out of order!");
+                
+                //ack but don't write
                 printf("Receiving packet %d\n", seq_num);
                 n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
                 if (n < 0) {error("ERROR writing from socket");}
-                
-                //printf("first packet");
-                data = fopen("received.data", "a");
-                fwrite(receivedData.full_data, 1, receivedData.size, data);
-                fclose(data);
             }
 
         }
