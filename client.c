@@ -123,7 +123,7 @@ SEND:
             }
             
             memset((char*)&receivedData, 0, sizeof(receivedData));
-            if(recvfrom(sockfd, &receivedData,sizeof(receivedData), 0, (struct sockaddr *)&serv_addr, &serv_len) >= 0) { //read from the socket
+            if(recvfrom(sockfd, &receivedData,sizeof(receivedData), MSG_DONTWAIT, (struct sockaddr *)&serv_addr, &serv_len) >= 0) { //read from the socket
                 is_first = 0;
                 
                 printf("Receiving packet %d\n", seq_num);
