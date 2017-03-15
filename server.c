@@ -86,13 +86,12 @@ int main(int argc, char *argv[])
     int k;
     FILE *fp;
     fp = fopen(buffer, "rb"); //filename
+    struct Packet fileToSend;
     int status = 0;
+
     if(fp != NULL) {
       status = 1;
       int isfirst = 0;
-
-      FILE * data; // for debugging
-        struct Packet fileToSend;
 
     //the number of total packet to send, divided into groups based on window
       while(!feof(fp)){//for(j = 0; j < (file_length/(MAX_PACKET_LEN-HEADER_SIZE))/(WINDOW_SIZE/MAX_PACKET_LEN) + 40; j ++)
@@ -110,28 +109,15 @@ int main(int argc, char *argv[])
                     break;
                 }
                 //put header into a buffer
-                char header_buffer[HEADER_SIZE];
-                snprintf(header_buffer, HEADER_SIZE, "%d", seq_num);
-                strcat(header_buffer, ":");
+                // char header_buffer[HEADER_SIZE];
+                // snprintf(header_buffer, HEADER_SIZE, "%d", seq_num);
+                // strcat(header_buffer, ":");
                 size_t val = fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
 
                // printf("val: %zd\n", val);
-                strcpy(packet, header_buffer);
+                //strcpy(packet, header_buffer);
 
-                // int i;
-                // for ( i=0; i < val; i++){
-                //   printf("i: %d, buffer: %x\n",i, buffer[i]);
-                // }
-
-                // DOESN'T LIKE THIS STRCAT
-                //strcat(packet, buffer);
-                memcpy(packet+strlen(header_buffer)+1, buffer, val);
-
-                 //data = fopen("received2.data", "a");
-                 //fwrite(packet+strlen(header_buffer)+1, sizeof(char), val, data);
-                 //fclose(data);
-
-                //printf("packet: %s\n", packet);
+                //memcpy(packet+strlen(header_buffer)+1, buffer, val);
 
                 if(was_first == 0 && sent_syn == 0) {
                     printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
@@ -139,21 +125,6 @@ int main(int argc, char *argv[])
                 fileToSend.sequence_num = seq_num;
                 fileToSend.size = val; //sizeof(buffer);
                 memcpy(fileToSend.full_data, buffer, fileToSend.size);
-                //strcpy(fileToSend.full_data, buffer);
-                
-                /*
-                printf("buffer size: %d", sizeof(buffer));
-                data = fopen("received3.data", "a");
-                fwrite(buffer, 1, strlen(buffer), data);
-                fclose(data);
-                
-                data = fopen("received2.data", "a");
-                fwrite(fileToSend.full_data, 1, fileToSend.size, data);
-                fclose(data);
-                 */
-                
-                
-                //fileToSend.full_data = buffer;
                 
                 sent_syn = 0;
                 //OK so we're sending a packet with sequence number, colon, data
@@ -170,13 +141,19 @@ int main(int argc, char *argv[])
             printf("Nope. Try another file.");
         }
     }
+
+    fclose(fp);
+
     char header_buffer[HEADER_SIZE];
     memset(header_buffer, 0, HEADER_SIZE);
-    snprintf(header_buffer, HEADER_SIZE, "%d", seq_num);
-    strcat(header_buffer, ":FIN");
+    strcat(header_buffer, "FIN");
       
-    fclose(fp);
-    n = sendto(sockfd,header_buffer,HEADER_SIZE, 0, (struct sockaddr *)&cli_addr, clilen);
+    fileToSend.sequence_num = seq_num;
+    fileToSend.size = 4; //sizeof(buffer);
+    memcpy(fileToSend.full_data, header_buffer, fileToSend.size);
+    
+    n = sendto(sockfd,&fileToSend,sizeof(fileToSend), 0, (struct sockaddr *)&cli_addr, clilen);
+    //n = sendto(sockfd,header_buffer,HEADER_SIZE, 0, (struct sockaddr *)&cli_addr, clilen);
     if (n < 0) {
         error("ERROR writing to socket");
     }

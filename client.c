@@ -105,50 +105,11 @@ int main(int argc, char *argv[])
           //printf("buffer: %s", buffer);
         //now parse the buffer at the first colon
         int k;
-        int has_seen_col = 0;
-        
-        //printf("buffer: %s\n", buffer);
-        
-        /*
-        for (k = 0; k < strlen(buffer); k++){
-            if(has_seen_col == 0){
-                char tmp2[4];
-                sprintf(tmp2, "%c", buffer[k]);
-               
-                //printf("tmp2: %s", tmp2);
-                
-                if(strcmp(tmp2, ":") == 0){
-                    has_seen_col = 1;
-                    //break;
-                }
-                else {
-                    strcat(seq_string, tmp2);
-                }
-                
-            }
-            else {
-                //char tmp[4];
-                //printf("buffer k: %c, %d\n", buffer[k], k);
-                //sprintf(tmp, "%c", buffer[k]);
-                //strcat(packet_data, tmp);
-                //printf("packet k: %s, %d\n", packet_data, k);
-                bzero(packet_data, 1004);
-                //printf("seq string: %s", seq_string);
-                //printf("buff: %s\n", buffer);
-                memcpy(packet_data, buffer + strlen(seq_string) + 1, 1004);
-            }
-            
-        }
-         */
-       
-    
-        //seq_num = atoi(seq_string);
+        //int has_seen_col = 0;
+
         seq_num = receivedData.sequence_num;
-        //memcpy(packet_data, buffer+k+1, 21);
-       // packet_data = receivedData.full_data;
-        //printf("seq: %d\n", seq_num);
-        //printf("packet data: %s\n", packet_data);
-        if(strcmp("FIN", packet_data) == 0){
+
+        if(strcmp("FIN", receivedData.full_data) == 0){
             printf("Receiving packet %d FIN\n", seq_num);
             sendto(sockfd,"FINACK", 7, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
             break;
@@ -160,13 +121,6 @@ int main(int argc, char *argv[])
             
             //printf("first packet");
             data = fopen("received.data", "a");
-
-            //data = fopen("received2.data", "a");
-            // fwrite(packet_data, sizeof(char), 21, data); // will need to update seq_num in both places
-            // fclose(data);
-
-            //printf("packet_data %s, %lu", packet_data, strlen(packet_data));
-            //fputs(buffer+k+1, data); // MIGHT NEED TO UPDATE TO FWRITE
             fwrite(receivedData.full_data, 1, receivedData.size, data);
             fclose(data);
 
