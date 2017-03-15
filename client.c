@@ -87,9 +87,14 @@ int main(int argc, char *argv[])
     //filePacket.full_data = filename;
     filePacket.size = strlen(filename);
     filePacket.syn = 1;
+    int retrans = 0;
 SEND:
     n = sendto(sockfd,&filePacket,sizeof(filePacket), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     if (n < 0) error("ERROR writing to socket");
+    if(retrans == 1){
+        printf("Sending packet SYN RETRANSMISSION\n");
+    }
+    retrans = 1;
     //char packet_data[MAX_PACKET_LEN - HEADER_SIZE];
     //memset(packet_data, 0, MAX_PACKET_LEN - HEADER_SIZE);
 
