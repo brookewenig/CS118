@@ -18,6 +18,8 @@ struct Packet {
     int sequence_num;
     char full_data[MAX_PACKET_LEN-HEADER_SIZE];
     int size;
+    int syn;
+    int fin;
 };
 
 void error(char *msg)
@@ -63,6 +65,7 @@ int main(int argc, char *argv[])
   int seq_num = 0;//rand() % (MAX_SEQ_NUM + 1);
   char ack_num[HEADER_SIZE];
   int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
+    struct Packet fileToSend, filePacket;
     
   while(1){
       
@@ -75,8 +78,8 @@ int main(int argc, char *argv[])
     memset(packet, 0, MAX_PACKET_LEN);
 
     //read client's message
-    n = recvfrom(sockfd,buffer, MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, &clilen);
-      if (was_first == 1){
+    n = recvfrom(sockfd,&filePacket, MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, &clilen);
+      if (filePacket.syn == 1){
           printf("Sending packet %d %d SYN\n", seq_num, WINDOW_SIZE);
           was_first = 0;
           sent_syn = 1;
@@ -85,8 +88,8 @@ int main(int argc, char *argv[])
     
     int k;
     FILE *fp;
-    fp = fopen(buffer, "rb"); //filename
-    struct Packet fileToSend;
+    fp = fopen(filePacket.full_data, "rb"); //filename
+    
     int status = 0;
 
     if(fp != NULL) {

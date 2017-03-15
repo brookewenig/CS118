@@ -22,6 +22,8 @@ struct Packet {
     int sequence_num;
     char full_data[MAX_PACKET_LEN-HEADER_SIZE];
     int size;
+    int syn;
+    int fin;
 };
 
 void error(char *msg)
@@ -78,9 +80,14 @@ int main(int argc, char *argv[])
     int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
     struct Packet_Data packet_array[num_structs]; //Number of packets saved. Number == window/packet len. Here it is 5
     
+    struct Packet receivedData, filePacket;
     printf("Sending packet SYN\n");
 
-    n = sendto(sockfd,filename,strlen(filename), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    memcpy(filePacket.full_data, filename, strlen(filename));
+    //filePacket.full_data = filename;
+    filePacket.size = strlen(filename);
+    filePacket.syn = 1;
+    n = sendto(sockfd,&filePacket,sizeof(filePacket), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     if (n < 0) error("ERROR writing to socket");
     char packet_data[MAX_PACKET_LEN - HEADER_SIZE];
     memset(packet_data, 0, MAX_PACKET_LEN - HEADER_SIZE);
@@ -92,7 +99,7 @@ int main(int argc, char *argv[])
     int prev_seq_num = 0;
     char seq_string[HEADER_SIZE];
     int is_first = 1;
-    struct Packet receivedData;
+
     
     while(1){
         memset(buffer,0,MAX_PACKET_LEN);
