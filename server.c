@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
   int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
   struct Packet fileToSend, filePacket;
   struct Packet_Data packet_data_array[5];
+    int num_packets_in_channel = 0;
     
   while(1){
       seq_num = 0;
@@ -127,12 +128,32 @@ int main(int argc, char *argv[])
                 packet_data_array[k].packet = fileToSend;
                 packet_data_array[k].start_time = time(NULL);
                 
+                if(num_packets_in_channel > 5){
+                    if(recvfrom(sockfd,ack_num, MAX_PACKET_LEN, MSG_DONTWAIT, (struct sockaddr *)&cli_addr, &clilen) >= 0) {
+                        num_packets_in_channel--;
+                        ack_num_array[k] = atoi(ack_num);
+                        int q, w;
+                        for(q = 0; q < 5; q++){
+                            for(w = 0; w < 5; w++){
+                                if (ack_num_array[q] == packet_data_array[w].packet.sequence_num){
+                                    ack_num_array[q] = -1;
+                                    packet_data_array[w].packet.sequence_num = seq_num + val;
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 sent_syn = 0;
-                //OK so we're sending a packet with sequence number, colon, data
-                n = sendto(sockfd,&fileToSend,sizeof(fileToSend), 0, (struct sockaddr *)&cli_addr, clilen);
-                if (n < 0) error("ERROR reading from socket");
-                n = recvfrom(sockfd,ack_num, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen);
-                if (n >= 0) {
+                //OK so we're sending a packet struct
+                if(num_packets_in_channel <= 5) {
+                    n = sendto(sockfd,&fileToSend,sizeof(fileToSend), 0, (struct sockaddr *)&cli_addr, clilen);
+                    if (n < 0) error("ERROR reading from socket");
+                    num_packets_in_channel++;
+                }
+                
+                if(recvfrom(sockfd,ack_num, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen) >= 0) {
+                    num_packets_in_channel--;
                     ack_num_array[k] = atoi(ack_num);
                     int q, w;
                     for(q = 0; q < 5; q++){
@@ -140,7 +161,7 @@ int main(int argc, char *argv[])
                             if (ack_num_array[q] == packet_data_array[w].packet.sequence_num){
                                 // Checking to see if received an ack for any of the previously sent packets
                                 ack_num_array[q] = -1;
-                                packet_data_array[w].packet.sequence_num = -2;
+                                packet_data_array[w].packet.sequence_num = seq_num + val;
                             }
                         }
                     }

@@ -161,8 +161,12 @@ SEND:
                 prev_seq_num = seq_num;
             }
             else {
+                
+                //for now just stop
+                break;
+                
                 //packet out of order
-                printf("Receiving packet (out of order) %d\n", seq_num);
+                printf("Receiving packet %d\n", seq_num);
                 n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
                 if (n < 0) {error("ERROR writing from socket");}
                 
