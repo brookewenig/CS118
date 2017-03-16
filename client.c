@@ -141,7 +141,7 @@ SEND:
         
             seq_num = receivedData.sequence_num;
             
-            if((seq_num <= prev_seq_num + MAX_PACKET_LEN) || (seq_num <= MAX_PACKET_LEN - prev_seq_num)) {
+            if((seq_num <= prev_seq_num + MAX_PACKET_LEN) || (seq_num <= MAX_PACKET_LEN)) {
                 if(strcmp("FIN", receivedData.full_data) == 0){
                     printf("Receiving packet %d FIN\n", seq_num);
                     //TODO: what if this is dropped?
@@ -161,13 +161,14 @@ SEND:
                 prev_seq_num = seq_num;
             }
             else {
-                //packet out of order, deal with it somehow
-                printf("out of order!");
-                
-                //ack but don't write
-                printf("Receiving packet %d\n", seq_num);
+                //packet out of order
+                printf("Receiving packet (out of order) %d\n", seq_num);
                 n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
                 if (n < 0) {error("ERROR writing from socket");}
+                
+                data = fopen("received.data", "a");
+                fwrite(receivedData.full_data, 1, receivedData.size, data);
+                fclose(data);
             }
 
         }

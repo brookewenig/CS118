@@ -28,10 +28,10 @@ void error(char *msg)
     exit(1);
 }
 
-//struct Packet_Data {
-//    struct Packet packet;
-//    time_t start_time;
-//};
+struct Packet_Data {
+    struct Packet packet;
+    time_t start_time;
+};
 
 int main(int argc, char *argv[])
 {
@@ -64,11 +64,11 @@ int main(int argc, char *argv[])
   int seq_num = 0;//rand() % (MAX_SEQ_NUM + 1);
   char ack_num[HEADER_SIZE];
   int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
-    struct Packet fileToSend, filePacket;
-  //struct* Packet_Data packet_data
+  struct Packet fileToSend, filePacket;
+  struct Packet_Data packet_data_array[5];
     
   while(1){
-      
+      seq_num = 0;
     int n;
     char buffer[MAX_PACKET_LEN-HEADER_SIZE];
     char packet[MAX_PACKET_LEN];
@@ -124,12 +124,27 @@ int main(int argc, char *argv[])
                 fileToSend.size = val;
                 memcpy(fileToSend.full_data, buffer, fileToSend.size);
                 
+                packet_data_array[k].packet = fileToSend;
+                packet_data_array[k].start_time = time(NULL);
+                
                 sent_syn = 0;
                 //OK so we're sending a packet with sequence number, colon, data
                 n = sendto(sockfd,&fileToSend,sizeof(fileToSend), 0, (struct sockaddr *)&cli_addr, clilen);
                 if (n < 0) error("ERROR reading from socket");
                 n = recvfrom(sockfd,ack_num, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen);
-                ack_num_array[k] = ack_num;
+                if (n >= 0) {
+                    ack_num_array[k] = atoi(ack_num);
+                    int q, w;
+                    for(q = 0; q < 5; q++){
+                        for(w = 0; w < 5; w++){
+                            if (ack_num_array[q] == packet_data_array[w].packet.sequence_num){
+                                // Checking to see if received an ack for any of the previously sent packets
+                                ack_num_array[q] = -1;
+                                packet_data_array[w].packet.sequence_num = -2;
+                            }
+                        }
+                    }
+                }
                 seq_num += val;
             }
             isfirst = 1;
@@ -170,7 +185,7 @@ int main(int argc, char *argv[])
               break;
           }
           
-        if( 10*(time(&timer)-timer2) > RTO) {
+        if( 1000*(time(&timer)-timer2) > RTO) {
             //please don't judge me
             goto SEND;
         }
