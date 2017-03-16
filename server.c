@@ -28,11 +28,10 @@ void error(char *msg)
     exit(1);
 }
 
-struct Packet_Data {
-    int seq_key;
-    char whole_packet[MAX_PACKET_LEN];
-    time_t start_time;
-};
+//struct Packet_Data {
+//    struct Packet packet;
+//    time_t start_time;
+//};
 
 int main(int argc, char *argv[])
 {
@@ -66,6 +65,7 @@ int main(int argc, char *argv[])
   char ack_num[HEADER_SIZE];
   int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
     struct Packet fileToSend, filePacket;
+  //struct* Packet_Data packet_data
     
   while(1){
       
@@ -91,6 +91,8 @@ int main(int argc, char *argv[])
     fp = fopen(filePacket.full_data, "rb"); //filename
     
     int status = 0;
+      
+    int ack_num_array[5];
 
     if(fp != NULL) {
       status = 1;
@@ -112,21 +114,14 @@ int main(int argc, char *argv[])
                     break;
                 }
                 //put header into a buffer
-                // char header_buffer[HEADER_SIZE];
-                // snprintf(header_buffer, HEADER_SIZE, "%d", seq_num);
-                // strcat(header_buffer, ":");
+
                 size_t val = fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
-
-               // printf("val: %zd\n", val);
-                //strcpy(packet, header_buffer);
-
-                //memcpy(packet+strlen(header_buffer)+1, buffer, val);
 
                 if(was_first == 0 && sent_syn == 0) {
                     printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
                 }
                 fileToSend.sequence_num = seq_num;
-                fileToSend.size = val; //sizeof(buffer);
+                fileToSend.size = val;
                 memcpy(fileToSend.full_data, buffer, fileToSend.size);
                 
                 sent_syn = 0;
@@ -134,6 +129,7 @@ int main(int argc, char *argv[])
                 n = sendto(sockfd,&fileToSend,sizeof(fileToSend), 0, (struct sockaddr *)&cli_addr, clilen);
                 if (n < 0) error("ERROR reading from socket");
                 n = recvfrom(sockfd,ack_num, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen);
+                ack_num_array[k] = ack_num;
                 seq_num += val;
             }
             isfirst = 1;
@@ -155,26 +151,40 @@ int main(int argc, char *argv[])
     fileToSend.size = 4; //sizeof(buffer);
     memcpy(fileToSend.full_data, header_buffer, fileToSend.size);
     
+  SEND:
     n = sendto(sockfd,&fileToSend,sizeof(fileToSend), 0, (struct sockaddr *)&cli_addr, clilen);
+    printf("Sending packet %d %d FIN\n", seq_num, WINDOW_SIZE);
     //n = sendto(sockfd,header_buffer,HEADER_SIZE, 0, (struct sockaddr *)&cli_addr, clilen);
     if (n < 0) {
         error("ERROR writing to socket");
     }
-    char wait[20];
-    printf("Sending packet %d %d FIN\n", seq_num, WINDOW_SIZE);
-    if(recvfrom(sockfd,wait, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen) >= 0){
-        printf("Receiving packet FINACK \n");
-
-        time_t timer ;
+      char wait[20];
+      time_t timer;
+      time(&timer);
+      time_t timer2;
+      time(&timer2);
+      
+      while(1) {
+          if(recvfrom(sockfd, wait, MAX_PACKET_LEN, MSG_DONTWAIT, (struct sockaddr *)&cli_addr, &clilen) >= 0){
+              printf("Receiving packet FINACK \n");
+              break;
+          }
+          
+        if( 10*(time(&timer)-timer2) > RTO) {
+            //please don't judge me
+            goto SEND;
+        }
+          
+      }
+        
+        //TIMED WAIT
         time(&timer);
-        time_t timer2;
         time(&timer2);
         while(1) {
             if( 1000*(time(&timer)-timer2) > 2*RTO){
                 break;
             }
         }
-    }
   }
      
  close(sockfd); 

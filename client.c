@@ -84,7 +84,6 @@ int main(int argc, char *argv[])
     printf("Sending packet SYN\n");
 
     memcpy(filePacket.full_data, filename, strlen(filename));
-    //filePacket.full_data = filename;
     filePacket.size = strlen(filename);
     filePacket.syn = 1;
     int retrans = 0;
@@ -95,8 +94,6 @@ SEND:
         printf("Sending packet SYN RETRANSMISSION\n");
     }
     retrans = 1;
-    //char packet_data[MAX_PACKET_LEN - HEADER_SIZE];
-    //memset(packet_data, 0, MAX_PACKET_LEN - HEADER_SIZE);
 
     FILE * data;
 
@@ -112,10 +109,6 @@ SEND:
     time(&timer2);
     
     while(1){
-        //memset(buffer,0,MAX_PACKET_LEN);
-        //memset(seq_string, 0, HEADER_SIZE);
-        //memset(packet_data,0,MAX_PACKET_LEN-HEADER_SIZE);
-        
         if(is_first == 1){
             if( 1000*(time(&timer)-timer2) > RTO) {
                 //please don't judge me
@@ -142,17 +135,18 @@ SEND:
             memset((char*)&receivedData, 0, sizeof(receivedData));
             n = recvfrom(sockfd, &receivedData,sizeof(receivedData), 0, (struct sockaddr *)&serv_addr, &serv_len); //read from the socket
             if (n < 0) {error("ERROR reading from socket");}
-              //printf("buffer: %s", buffer);
+
             //now parse the buffer at the first colon
             int k;
-            //int has_seen_col = 0;
         
             seq_num = receivedData.sequence_num;
             
-            if(seq_num <= prev_seq_num + 1024) {
+            if((seq_num <= prev_seq_num + MAX_PACKET_LEN) || (seq_num <= MAX_PACKET_LEN - prev_seq_num)) {
                 if(strcmp("FIN", receivedData.full_data) == 0){
                     printf("Receiving packet %d FIN\n", seq_num);
+                    //TODO: what if this is dropped?
                     sendto(sockfd,"FINACK", 7, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+                    printf("Sending packet %d FINACK\n", seq_num);
                     break;
                 }
                 else{
@@ -160,7 +154,6 @@ SEND:
                     n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
                     if (n < 0) {error("ERROR writing from socket");}
                     
-                    //printf("first packet");
                     data = fopen("received.data", "a");
                     fwrite(receivedData.full_data, 1, receivedData.size, data);
                     fclose(data);
