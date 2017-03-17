@@ -67,8 +67,10 @@ int main(int argc, char *argv[])
   struct Packet fileToSend, filePacket, ackPacket;
   struct Packet_Data packet_data_array[5];
     int num_packets_in_channel = 0;
+    int status = 0;
     
   while(1){
+      num_packets_in_channel = 0;
       seq_num = 0;
     int n;
     char buffer[MAX_PACKET_LEN-HEADER_SIZE];
@@ -78,7 +80,6 @@ int main(int argc, char *argv[])
     memset(buffer, 0, MAX_PACKET_LEN-HEADER_SIZE);  //reset memory
     memset(packet, 0, MAX_PACKET_LEN);
 
-      printf("got up");
     //read client's message
     n = recvfrom(sockfd,&filePacket, MAX_PACKET_LEN-1, 0, (struct sockaddr *)&cli_addr, &clilen);
       if (filePacket.syn == 1){
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
     FILE *fp;
     fp = fopen(filePacket.full_data, "rb"); //filename
     
-    int status = 0;
+    
       
     int ack_num_array[5];
 
@@ -103,7 +104,9 @@ int main(int argc, char *argv[])
     //the number of total packet to send, divided into groups based on window
       while(!feof(fp)){//for(j = 0; j < (file_length/(MAX_PACKET_LEN-HEADER_SIZE))/(WINDOW_SIZE/MAX_PACKET_LEN) + 40; j ++)
             //by default, should be 5 (send 5 packets at once)
+          //printf("back at top\n");
           if(isfirst == 0) {
+            //printf("first 5 only \n");
             for(k = 0; k < WINDOW_SIZE/MAX_PACKET_LEN; k++)
             {
                 if(seq_num > MAX_SEQ_NUM) {
@@ -116,8 +119,7 @@ int main(int argc, char *argv[])
                 if(feof(fp)){
                     break;
                 }
-                //put header into a buffer
-
+              
                 size_t val = fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
 
                 if(was_first == 0 && sent_syn == 0) {
@@ -159,7 +161,9 @@ int main(int argc, char *argv[])
                 seq_num += val;
             }
           }
-            isfirst = 1;
+          isfirst = 1;
+          //ackPacket.sequence_num = 0;
+          //printf("right before receive\n");
           if(recvfrom(sockfd,&ackPacket, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen) >= 0) {
               printf("Receiving packet %d\n", ackPacket.sequence_num);
               
@@ -173,25 +177,23 @@ int main(int argc, char *argv[])
               
               size_t val = fread(buffer, sizeof(char), MAX_PACKET_LEN-HEADER_SIZE-1, fp);
               
-              if(was_first == 0 && sent_syn == 0) {
-                  printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
-              }
               fileToSend.sequence_num = seq_num;
               fileToSend.size = val;
               memcpy(fileToSend.full_data, buffer, fileToSend.size);
               
               packet_data_array[k].packet = fileToSend;
               packet_data_array[k].start_time = time(NULL);
-              
-              
              
               n = sendto(sockfd,&fileToSend,sizeof(fileToSend), 0, (struct sockaddr *)&cli_addr, clilen);
               if (n < 0) error("ERROR writing to socket");
+              printf("Sending packet %d %d\n", seq_num, WINDOW_SIZE);
+              //printf("In received loop 3\n");
                seq_num += val;
+              //printf("In received loop 4\n");
               
           }
+          //printf("kicked out\n");
        }
-    }
 
     fclose(fp);
 
@@ -236,10 +238,15 @@ int main(int argc, char *argv[])
         }
           
       }
-    else {
-        printf("Nope. Try another file.");
-        break;
     }
+//    else {
+//        printf("got in here somehow");
+//        if (status == 0) {
+//            printf("Nope. Try another file.");
+//            break;
+//        }
+//        
+//    }
       
 
   }
