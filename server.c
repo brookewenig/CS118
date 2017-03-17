@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
   int seq_num = 0;//rand() % (MAX_SEQ_NUM + 1);
   char ack_num[HEADER_SIZE];
   int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
-  struct Packet fileToSend, filePacket;
+  struct Packet fileToSend, filePacket, ackPacket;
   struct Packet_Data packet_data_array[5];
     int num_packets_in_channel = 0;
     
@@ -152,7 +152,8 @@ int main(int argc, char *argv[])
                     num_packets_in_channel++;
                 }
                 
-                if(recvfrom(sockfd,ack_num, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen) >= 0) {
+                if(recvfrom(sockfd,&ackPacket, MAX_PACKET_LEN, 0, (struct sockaddr *)&cli_addr, &clilen) >= 0) {
+                    printf("Receiving packet %d\n", ackPacket.sequence_num);
                     num_packets_in_channel--;
                     ack_num_array[k] = atoi(ack_num);
                     int q, w;

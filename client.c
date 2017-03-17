@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
     struct Packet_Data packet_array[num_structs]; //Number of packets saved. Number == window/packet len. Here it is 5
     
-    struct Packet receivedData, filePacket;
+    struct Packet receivedData, filePacket, ackPacket;
     printf("Sending packet SYN\n");
 
     memcpy(filePacket.full_data, filename, strlen(filename));
@@ -151,7 +151,9 @@ SEND:
                 }
                 else{
                     printf("Receiving packet %d\n", seq_num);
-                    n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+                    ackPacket.sequence_num = seq_num;
+                    n = sendto(sockfd,&ackPacket,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+                    printf("Sending packet %d\n", seq_num);
                     if (n < 0) {error("ERROR writing from socket");}
                     
                     data = fopen("received.data", "a");
