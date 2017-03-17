@@ -118,12 +118,13 @@ SEND:
             memset((char*)&receivedData, 0, sizeof(receivedData));
             if(recvfrom(sockfd, &receivedData,sizeof(receivedData), MSG_DONTWAIT, (struct sockaddr *)&serv_addr, &serv_len) >= 0) { //read from the socket
                 is_first = 0;
-                
+                seq_num = receivedData.sequence_num;
                 printf("Receiving packet %d\n", seq_num);
                 n = sendto(sockfd,seq_string,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-                if (n < 0) {error("ERROR writing from socket");}
+                if (n < 0) {error("ERROR writing to socket");}
+                printf("Sending packet %d\n", seq_num);
                 
-                seq_num = receivedData.sequence_num;
+               
                 prev_seq_num = seq_num;
                 //printf("first packet");
                 data = fopen("received.data", "a");
@@ -152,7 +153,7 @@ SEND:
                 else{
                     printf("Receiving packet %d\n", seq_num);
                     ackPacket.sequence_num = seq_num;
-                    n = sendto(sockfd,&ackPacket,HEADER_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+                    n = sendto(sockfd,&ackPacket,sizeof(ackPacket), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
                     printf("Sending packet %d\n", seq_num);
                     if (n < 0) {error("ERROR writing from socket");}
                     
