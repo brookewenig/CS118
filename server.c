@@ -28,10 +28,6 @@ void error(char *msg)
     exit(1);
 }
 
-struct Packet_Data {
-    struct Packet packet;
-    time_t start_time;
-};
 
 int main(int argc, char *argv[])
 {
@@ -65,7 +61,6 @@ int main(int argc, char *argv[])
   char ack_num[HEADER_SIZE];
   int num_structs = WINDOW_SIZE/MAX_PACKET_LEN;
   struct Packet fileToSend, filePacket, ackPacket;
-  struct Packet_Data packet_data_array[5];
     int num_packets_in_channel = 0;
     int status = 0;
     
@@ -128,10 +123,6 @@ int main(int argc, char *argv[])
                 fileToSend.size = val;
                 memcpy(fileToSend.full_data, buffer, fileToSend.size);
                 
-                packet_data_array[k].packet = fileToSend;
-                packet_data_array[k].start_time = time(NULL);
-                
-                
                 sent_syn = 0;
                 //OK so we're sending a packet struct
                 if(num_packets_in_channel <= 5) {
@@ -161,9 +152,6 @@ int main(int argc, char *argv[])
               fileToSend.sequence_num = seq_num;
               fileToSend.size = val;
               memcpy(fileToSend.full_data, buffer, fileToSend.size);
-              
-              packet_data_array[k].packet = fileToSend;
-              packet_data_array[k].start_time = time(NULL);
              
               n = sendto(sockfd,&fileToSend,sizeof(fileToSend), 0, (struct sockaddr *)&cli_addr, clilen);
               if (n < 0) error("ERROR writing to socket");
